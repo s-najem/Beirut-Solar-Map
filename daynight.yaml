@@ -1,0 +1,125 @@
+# scene:
+#     animated: true
+#     background:
+
+sources:
+    overlay:
+        type: GeoJSON
+        url: osmb-testdata.geo.json
+
+    osm:
+        type: TopoJSON
+        url:  //vector.mapzen.com/osm/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-HqUVidw
+
+cameras:
+    camera1:
+        type: isometric
+        axis: [1, 1]
+        # focal_length: 2
+        # vanishing_point: [-250, -250] # relative to center of screen, in pixels
+
+lights:
+    sun:
+        type: directional
+        direction: [0, 1, -.5]
+        diffuse: [1, 1, 1]
+        ambient: .5
+    moon:
+        type: directional
+        direction: [0, 1, -.5]
+        diffuse: [0, 0, .5]
+        ambient: .2
+
+styles:
+    roads:
+        base: lines
+        material:
+            diffuse: 1
+            emission: 1
+    water:
+        base: polygons
+        material:
+            diffuse: 1
+            ambient: 1
+    buildings:
+        base: polygons
+        material:
+            diffuse: 1
+            ambient: 1
+
+layers:
+    earth:
+        data: { source: osm }
+        draw:
+            polygons:
+                order: 0
+                color: '#ddeeee'
+
+    landuse:
+        data: { source: osm }
+        draw:
+            polygons:
+                order: 1
+                color: '#aaddaa'
+
+    water:
+        data: { source: osm }
+        draw:
+            polygons:
+                style: water
+                order: 2
+                color: '#88bbee'
+
+    roads:
+        data: { source: osm }
+        filter:
+            not: { kind: [path, rail, ferry] }
+        draw:
+            lines:
+                order: 4
+                color: gray
+                width: 8
+                cap: round
+        highway:
+            filter:
+                kind: highway
+            draw:
+                lines:
+                    order: 5
+                    color: '#cc6666'
+                    width: 12
+                    outline:
+                        color: grey
+                        width: 1.5
+        minor_road:
+            filter:
+                kind: minor_road
+            draw:
+                lines:
+                    order: 3
+                    color: lightgrey
+                    width: 5
+
+    buildings:
+        data: { source: overlay }
+        draw:
+            polygons:
+                order: 6
+                color: |
+                    function () {
+                        if (feature.height < 21 )
+                            return [176/255,196/255,222/255]
+                        if (feature.height >= 21 &  feature.height < 53)
+                            return [173/255,216/255,230/255]
+                        if (feature.height >= 53 &  feature.height < 75)
+                            return [119/255,136/255,153/255]
+                        if (feature.height >= 75)
+                            return [70/255,130/255,180/255]
+
+                        }
+        3d-buildings:
+            filter: { $zoom: { min: 15 } }
+            draw:
+                polygons:
+                    extrude: function () { return feature.height > 10 || $zoom >= 16; }
+
